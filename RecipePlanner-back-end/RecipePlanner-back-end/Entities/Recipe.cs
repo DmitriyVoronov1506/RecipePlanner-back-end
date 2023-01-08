@@ -12,5 +12,6 @@
         public string? KindOfMeal { get; set; }
         public string? Diet { get; set; }
         public Dictionary<string, string>? Ingredients { get; set; }
+        public int? IngredientCount { get; set; }
     }
 }

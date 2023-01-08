@@ -12,7 +12,7 @@ using static System.Net.Mime.MediaTypeNames;
 namespace RecipePlanner_back_end.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("RecipesFilterController")]
     public class RecipesFilterController : ControllerBase
     {
         private readonly RecipeDatabaseContext _recipeDatabaseContext;
@@ -157,7 +157,8 @@ namespace RecipePlanner_back_end.Controllers
 
         }
 
-        [HttpGet(Name = "GetAllRecipies")]
+        [HttpGet]
+        [Route("/GetAllRecipies")]
         public List<Recipe> GetAllRecipies(int? count)
         {
             List<Recipe> Recipies = new List<Recipe>();
@@ -201,6 +202,8 @@ namespace RecipePlanner_back_end.Controllers
                                       .Where(m => m.IdMeal.Equals(rec.Id))
                                       .ToDictionary(r => r.IdIngredientNavigation.Name, r => r.Quantity)
                         };
+
+                        recipe.IngredientCount = recipe.Ingredients.Count();
 
                         Recipies.Add(recipe);
                     }
@@ -260,6 +263,8 @@ namespace RecipePlanner_back_end.Controllers
 
                         };
 
+                        recipe.IngredientCount = recipe.Ingredients.Count();
+
                         Recipies.Add(recipe);
                     }
                     catch(Exception ex)
@@ -271,6 +276,13 @@ namespace RecipePlanner_back_end.Controllers
             }
 
             return Recipies;
+        }
+
+        [HttpGet]
+        [Route("/GetInfo")]
+        public string GetInfo()
+        {
+            return "TestMethod";
         }
     }
 }
