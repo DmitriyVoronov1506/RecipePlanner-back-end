@@ -6,6 +6,7 @@ using RecipePlanner_back_end.Models.Recipes;
 using RecipePlanner_back_end.Services;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -334,7 +335,7 @@ namespace RecipePlanner_back_end.Controllers
 
             foreach (var i in ingr)
             {
-                i.IdIngredientNavigation = ingredientsTables.Where(t => t.Id.Equals(i.IdIngredient)).FirstOrDefault()!;
+                i.IdIngredientNavigation = ingredientsTables.Where(t => t.Id.Equals(i.IdIngredient)).FirstOrDefault();
             }
 
             try
@@ -381,7 +382,6 @@ namespace RecipePlanner_back_end.Controllers
             return rwp;
         }   
             
-
         [HttpGet]
         [Route("/GetRecipiesByNameOrIngredient")]
         public RecipeWithPattern GetRecipiesByPattern(string pattern)
@@ -394,11 +394,13 @@ namespace RecipePlanner_back_end.Controllers
             RecipeWithPattern RecipiesWithPattern = new RecipeWithPattern();
             List<MainTable> mainTableList = null!;
 
+            Regex regex = new Regex(@$"^(.+\s+{pattern}([s]*|[es]*)\s+.+)|(.+\s+{pattern}([s]*|[es]*)$)|(^{pattern}([s]*|[es]*)$)|(^{pattern}([s]*|[es]*)\s+.*)$", RegexOptions.IgnoreCase);
+
             if (!_developeService.isProduction)
             {
                 mainTableList = _recipeDatabaseContext.MainTables.ToList();
 
-                mainTableList = mainTableList.Where(m => m.Name.Contains(pattern, StringComparison.OrdinalIgnoreCase)).ToList();
+                mainTableList = mainTableList.Where(m => regex.IsMatch(m.Name)).ToList();
 
                 foreach (var rec in mainTableList)
                 {
@@ -406,16 +408,13 @@ namespace RecipePlanner_back_end.Controllers
 
                     if (recipe != null)
                     {
-                        var check = recipe.Ingredients?.Where(i => i.Key.Contains(pattern)).ToDictionary(d => d.Key, d => d.Value);
-
-                        if (check?.Count != 0)
-                             RecipiesWithPattern.RecipesWithPatternInName.Add(recipe);
+                        RecipiesWithPattern.RecipesWithPatternInName.Add(recipe);
                     }
                 }
 
                 var ingredietns = _recipeDatabaseContext.IngredientsTables.ToList();
 
-                ingredietns = ingredietns.Where(i => i.Name.Contains(pattern, StringComparison.OrdinalIgnoreCase)).ToList();
+                ingredietns = ingredietns.Where(i => regex.IsMatch(i.Name)).ToList();
 
                 List<MealIngredient> mealingredients = new List<MealIngredient>();
 
@@ -452,40 +451,37 @@ namespace RecipePlanner_back_end.Controllers
                 RecipiesWithPattern.RecipesWithPatternInIngredient = RecipiesWithPattern.RecipesWithPatternInIngredient.DistinctBy(r => r.Id).ToList();
                 RecipiesWithPattern.RecipesWithPatternInName = RecipiesWithPattern.RecipesWithPatternInName.DistinctBy(r => r.Id).ToList();
 
-                RecipiesWithPattern = RemoveDupliateMeals(RecipiesWithPattern);
+               RecipiesWithPattern = RemoveDupliateMeals(RecipiesWithPattern);
 
                 RecipiesWithPattern.Count = RecipiesWithPattern.RecipesWithPatternInIngredient.Count + RecipiesWithPattern.RecipesWithPatternInName.Count;
             }
             else
             {
+                List<IngredientsTable> It = new List<IngredientsTable>();
+
                 JsonDeserializeForProduction();
 
                 mainTableList = maintables.ToList();
 
-                mainTableList = mainTableList.Where(m => m.Name.Contains(pattern, StringComparison.OrdinalIgnoreCase)).ToList();
+                mainTableList = mainTableList.Where(m => regex.IsMatch(m.Name)).ToList();
 
                 foreach (var rec in mainTableList)
                 {
                     var recipe = CreateRecipeForProduction(rec);
 
                     if (recipe != null)
-                    {
-                        var check = recipe.Ingredients?.Where(i => i.Key.Contains(pattern)).ToDictionary(d => d.Key, d => d.Value);
-
-                        if (check?.Count != 0)
-                            RecipiesWithPattern.RecipesWithPatternInName.Add(recipe);
+                    {              
+                        RecipiesWithPattern.RecipesWithPatternInName.Add(recipe);
                     }
                 }
 
-                var ingredietns = _recipeDatabaseContext.IngredientsTables.ToList();
-
-                ingredietns = ingredietns.Where(i => i.Name.Contains(pattern, StringComparison.OrdinalIgnoreCase)).ToList();
+                It = ingredientsTables.Where(i => regex.IsMatch(i.Name)).ToList();
 
                 List<MealIngredient> mealingredients = new List<MealIngredient>();
 
-                foreach (var i in ingredietns)
+                foreach (var i in It)
                 {
-                    var mealingredient = _recipeDatabaseContext.MealIngredients.Where(m => m.IdIngredient.Equals(i.Id)).FirstOrDefault();
+                    var mealingredient = mealIngredients.Where(m => m.IdIngredient.Equals(i.Id)).FirstOrDefault();
 
                     if (mealingredient != null)
                     {
@@ -499,7 +495,7 @@ namespace RecipePlanner_back_end.Controllers
 
                 foreach (var meal in mealingredients)
                 {
-                    var mealingredientpattern = _recipeDatabaseContext.MainTables.Where(m => m.Id.Equals(meal.IdMeal)).FirstOrDefault();
+                    var mealingredientpattern = maintables.Where(m => m.Id.Equals(meal.IdMeal)).FirstOrDefault();
 
                     if (mealingredientpattern != null)
                     {
