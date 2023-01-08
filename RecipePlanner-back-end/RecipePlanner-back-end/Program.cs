@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using RecipePlanner_back_end.Contexts;
 using RecipePlanner_back_end.Services;
+using static System.Net.Mime.MediaTypeNames;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,3 +43,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+

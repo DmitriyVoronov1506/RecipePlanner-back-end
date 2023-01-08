@@ -278,11 +278,251 @@ namespace RecipePlanner_back_end.Controllers
             return Recipies;
         }
 
-        [HttpGet]
-        [Route("/GetInfo")]
-        public string GetInfo()
+        private Recipe CreateRecipeForLocal(MainTable rec)
         {
-            return "TestMethod";
+            var info = _recipeDatabaseContext.AdditionalInfos
+                        .Include(a => a.IdCuisineNavigation)
+                        .Include(a => a.IdKindOfMealNavigation)
+                        .Where(a => a.IdMeal.Equals(rec.Id)).FirstOrDefault();
+
+            var diet = _recipeDatabaseContext.DietMeals.Include(d => d.IdDietNavigation).Where(d => d.IdMeal.Equals(rec.Id)).FirstOrDefault();
+
+            try
+            {
+                var recipe = new Recipe()
+                {
+                    Id = rec.Id,
+                    Description = rec?.Description,
+                    Name = rec?.Name,
+                    Calories = rec?.Calories,
+                    CookingTime = info?.CookingTime,
+                    Image = info?.Image,
+                    CuisineType = info?.IdCuisineNavigation?.Name,
+                    KindOfMeal = info?.IdKindOfMealNavigation?.Name,
+                    Diet = diet?.IdDietNavigation?.Name,
+                    Ingredients = _recipeDatabaseContext.MealIngredients
+                              .Include(m => m.IdIngredientNavigation)
+                              .Where(m => m.IdMeal.Equals(rec.Id))
+                              .ToDictionary(r => r.IdIngredientNavigation.Name, r => r.Quantity)
+                };
+
+                recipe.IngredientCount = recipe.Ingredients.Count();            
+
+                return recipe;
+            }
+            catch (Exception ex)
+            {
+                return null!;
+            }
+         
+        }
+
+        private Recipe CreateRecipeForProduction(MainTable rec)
+        {
+            var info = addinfo.Where(a => a.IdMeal.Equals(rec.Id)).FirstOrDefault();
+            info!.IdCuisineNavigation = cuisineTypes.Where(c => c.Id.Equals(info.IdCuisine)).FirstOrDefault();
+            info.IdKindOfMealNavigation = kindOfMeals.Where(k => k.Id.Equals(info.IdKindOfMeal)).FirstOrDefault()!;
+
+            var diet = dietMeals.Where(d => d.IdMeal.Equals(rec.Id)).FirstOrDefault();
+
+            if (diet != null)
+            {
+                diet.IdDietNavigation = dietTables.Where(d => d.Id.Equals(diet.IdDiet)).FirstOrDefault()!;
+            }
+
+            var ingr = mealIngredients.Where(a => a.IdMeal.Equals(rec.Id)).ToList();
+
+            foreach (var i in ingr)
+            {
+                i.IdIngredientNavigation = ingredientsTables.Where(t => t.Id.Equals(i.IdIngredient)).FirstOrDefault()!;
+            }
+
+            try
+            {
+                var recipe = new Recipe()
+                {
+                    Id = rec.Id,
+                    Description = rec?.Description,
+                    Name = rec?.Name,
+                    Calories = rec?.Calories,
+                    CookingTime = info?.CookingTime,
+                    Image = info?.Image,
+                    CuisineType = info?.IdCuisineNavigation?.Name,
+                    KindOfMeal = info?.IdKindOfMealNavigation?.Name,
+                    Diet = diet?.IdDietNavigation?.Name,
+                    Ingredients = ingr.ToDictionary(r => r.IdIngredientNavigation.Name, r => r.Quantity)
+                };
+
+                recipe.IngredientCount = recipe.Ingredients.Count();
+
+                return recipe;
+            }
+            catch (Exception ex)
+            {
+                return null!;
+            }
+
+        }
+
+        private RecipeWithPattern RemoveDupliateMeals(RecipeWithPattern rwp)
+        {
+            List<Recipe> recipeForRemove = new List<Recipe>();
+
+            foreach (var r in rwp.RecipesWithPatternInName)
+            {
+                var recipe = rwp.RecipesWithPatternInIngredient.Where(rc => rc.Id.Equals(r.Id)).FirstOrDefault();
+
+                if(recipe != null)
+                {
+                    rwp.RecipesWithPatternInIngredient.Remove(recipe);
+                }
+            }
+          
+            return rwp;
+        }   
+            
+
+        [HttpGet]
+        [Route("/GetRecipiesByNameOrIngredient")]
+        public RecipeWithPattern GetRecipiesByPattern(string pattern)
+        {
+            if(string.IsNullOrEmpty(pattern))
+            {
+                return null!;
+            }
+
+            RecipeWithPattern RecipiesWithPattern = new RecipeWithPattern();
+            List<MainTable> mainTableList = null!;
+
+            if (!_developeService.isProduction)
+            {
+                mainTableList = _recipeDatabaseContext.MainTables.ToList();
+
+                mainTableList = mainTableList.Where(m => m.Name.Contains(pattern, StringComparison.OrdinalIgnoreCase)).ToList();
+
+                foreach (var rec in mainTableList)
+                {
+                    var recipe = CreateRecipeForLocal(rec);
+
+                    if (recipe != null)
+                    {
+                        var check = recipe.Ingredients?.Where(i => i.Key.Contains(pattern)).ToDictionary(d => d.Key, d => d.Value);
+
+                        if (check?.Count != 0)
+                             RecipiesWithPattern.RecipesWithPatternInName.Add(recipe);
+                    }
+                }
+
+                var ingredietns = _recipeDatabaseContext.IngredientsTables.ToList();
+
+                ingredietns = ingredietns.Where(i => i.Name.Contains(pattern, StringComparison.OrdinalIgnoreCase)).ToList();
+
+                List<MealIngredient> mealingredients = new List<MealIngredient>();
+
+                foreach(var i in ingredietns)
+                {
+                    var mealingredient = _recipeDatabaseContext.MealIngredients.Where(m => m.IdIngredient.Equals(i.Id)).FirstOrDefault();
+
+                    if(mealingredient != null)
+                    {
+                        mealingredients.Add(mealingredient);
+                    }          
+                }
+
+                List<MainTable> mainTableListForIngredientsPattern = new List<MainTable>();
+
+                mealingredients = mealingredients.DistinctBy(m => m.Id).ToList();
+
+                foreach(var meal in mealingredients)
+                {
+                    var mealingredientpattern = _recipeDatabaseContext.MainTables.Where(m => m.Id.Equals(meal.IdMeal)).FirstOrDefault();
+
+                    if(mealingredientpattern != null)
+                    {
+                        var recipe = CreateRecipeForLocal(mealingredientpattern);
+
+                        if(recipe != null)
+                        {               
+                             RecipiesWithPattern.RecipesWithPatternInIngredient.Add(recipe);
+                        }
+                    }
+                    
+                }
+
+                RecipiesWithPattern.RecipesWithPatternInIngredient = RecipiesWithPattern.RecipesWithPatternInIngredient.DistinctBy(r => r.Id).ToList();
+                RecipiesWithPattern.RecipesWithPatternInName = RecipiesWithPattern.RecipesWithPatternInName.DistinctBy(r => r.Id).ToList();
+
+                RecipiesWithPattern = RemoveDupliateMeals(RecipiesWithPattern);
+
+                RecipiesWithPattern.Count = RecipiesWithPattern.RecipesWithPatternInIngredient.Count + RecipiesWithPattern.RecipesWithPatternInName.Count;
+            }
+            else
+            {
+                JsonDeserializeForProduction();
+
+                mainTableList = maintables.ToList();
+
+                mainTableList = mainTableList.Where(m => m.Name.Contains(pattern, StringComparison.OrdinalIgnoreCase)).ToList();
+
+                foreach (var rec in mainTableList)
+                {
+                    var recipe = CreateRecipeForProduction(rec);
+
+                    if (recipe != null)
+                    {
+                        var check = recipe.Ingredients?.Where(i => i.Key.Contains(pattern)).ToDictionary(d => d.Key, d => d.Value);
+
+                        if (check?.Count != 0)
+                            RecipiesWithPattern.RecipesWithPatternInName.Add(recipe);
+                    }
+                }
+
+                var ingredietns = _recipeDatabaseContext.IngredientsTables.ToList();
+
+                ingredietns = ingredietns.Where(i => i.Name.Contains(pattern, StringComparison.OrdinalIgnoreCase)).ToList();
+
+                List<MealIngredient> mealingredients = new List<MealIngredient>();
+
+                foreach (var i in ingredietns)
+                {
+                    var mealingredient = _recipeDatabaseContext.MealIngredients.Where(m => m.IdIngredient.Equals(i.Id)).FirstOrDefault();
+
+                    if (mealingredient != null)
+                    {
+                        mealingredients.Add(mealingredient);
+                    }
+                }
+
+                List<MainTable> mainTableListForIngredientsPattern = new List<MainTable>();
+
+                mealingredients = mealingredients.DistinctBy(m => m.Id).ToList();
+
+                foreach (var meal in mealingredients)
+                {
+                    var mealingredientpattern = _recipeDatabaseContext.MainTables.Where(m => m.Id.Equals(meal.IdMeal)).FirstOrDefault();
+
+                    if (mealingredientpattern != null)
+                    {
+                        var recipe = CreateRecipeForProduction(mealingredientpattern);
+
+                        if (recipe != null)
+                        {
+                            RecipiesWithPattern.RecipesWithPatternInIngredient.Add(recipe);
+                        }
+                    }
+
+                }
+
+                RecipiesWithPattern.RecipesWithPatternInIngredient = RecipiesWithPattern.RecipesWithPatternInIngredient.DistinctBy(r => r.Id).ToList();
+                RecipiesWithPattern.RecipesWithPatternInName = RecipiesWithPattern.RecipesWithPatternInName.DistinctBy(r => r.Id).ToList();
+
+                RecipiesWithPattern = RemoveDupliateMeals(RecipiesWithPattern);
+
+                RecipiesWithPattern.Count = RecipiesWithPattern.RecipesWithPatternInIngredient.Count + RecipiesWithPattern.RecipesWithPatternInName.Count;
+            }
+           
+
+            return RecipiesWithPattern;
         }
     }
 }
