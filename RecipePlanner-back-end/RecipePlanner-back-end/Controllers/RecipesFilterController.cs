@@ -4,6 +4,7 @@ using RecipePlanner_back_end.Contexts;
 using RecipePlanner_back_end.Entities;
 using RecipePlanner_back_end.Models.Recipes;
 using RecipePlanner_back_end.Services;
+using System.Linq;
 using System.Text.Json;
 using System.Xml.Linq;
 using static System.Net.Mime.MediaTypeNames;
@@ -157,15 +158,23 @@ namespace RecipePlanner_back_end.Controllers
         }
 
         [HttpGet(Name = "GetAllRecipies")]
-        public List<Recipe> GetAllRecipies(int count = 10)
+        public List<Recipe> GetAllRecipies(int? count)
         {
             List<Recipe> Recipies = new List<Recipe>();
+            List<MainTable> mainTableList = null!;
 
-            if(!_developeService.isProduction)
-            {
-                var allRecipiesMain = _recipeDatabaseContext.MainTables.Take(count).ToList();
-
-                foreach(var rec in allRecipiesMain)
+            if (!_developeService.isProduction)
+            {              
+                if(count != null)
+                {
+                    mainTableList = _recipeDatabaseContext.MainTables.Take((int)count).ToList();
+                }
+                else
+                {
+                    mainTableList = _recipeDatabaseContext.MainTables.ToList();
+                }
+             
+                foreach(var rec in mainTableList)
                 {            
                     var info = _recipeDatabaseContext.AdditionalInfos
                         .Include(a => a.IdCuisineNavigation)
@@ -174,38 +183,47 @@ namespace RecipePlanner_back_end.Controllers
 
                     var diet = _recipeDatabaseContext.DietMeals.Include(d => d.IdDietNavigation).Where(d => d.IdMeal.Equals(rec.Id)).FirstOrDefault();
 
-                    var recipe = new Recipe()
+                    try
                     {
-                        Id = rec.Id,
-                        Description = rec?.Description,
-                        Name = rec?.Name,
-                        Calories = rec?.Calories,
-                        CookingTime = info?.CookingTime,
-                        Image = info?.Image,
-                        CuisineType = info?.IdCuisineNavigation?.Name,
-                        KindOfMeal = info?.IdKindOfMealNavigation?.Name,
-                        Diet = diet?.IdDietNavigation?.Name,
-                        Ingredients = _recipeDatabaseContext.MealIngredients
+                        var recipe = new Recipe()
+                        {
+                            Id = rec.Id,
+                            Description = rec?.Description,
+                            Name = rec?.Name,
+                            Calories = rec?.Calories,
+                            CookingTime = info?.CookingTime,
+                            Image = info?.Image,
+                            CuisineType = info?.IdCuisineNavigation?.Name,
+                            KindOfMeal = info?.IdKindOfMealNavigation?.Name,
+                            Diet = diet?.IdDietNavigation?.Name,
+                            Ingredients = _recipeDatabaseContext.MealIngredients
                                       .Include(m => m.IdIngredientNavigation)
                                       .Where(m => m.IdMeal.Equals(rec.Id))
                                       .ToDictionary(r => r.IdIngredientNavigation.Name, r => r.Quantity)
-                    };
+                        };
 
-                    Recipies.Add(recipe);
+                        Recipies.Add(recipe);
+                    }
+                    catch(Exception ex)
+                    {
 
+                    }               
                 }
-
-                return Recipies;
             }
             else
             {
                 JsonDeserializeForProduction();
 
-                List<Recipe> RecipiesLocall = new List<Recipe>();
-
-                var allRecipiesMain = maintables.Take(count).ToList();
-
-                foreach (var rec in allRecipiesMain)
+                if (count != null)
+                {
+                    mainTableList = maintables.Take((int)count).ToList();
+                }
+                else
+                {
+                    mainTableList = maintables.ToList();
+                }
+           
+                foreach (var rec in mainTableList)
                 {
                     var info = addinfo.Where(a => a.IdMeal.Equals(rec.Id)).FirstOrDefault();
                     info!.IdCuisineNavigation = cuisineTypes.Where(c => c.Id.Equals(info.IdCuisine)).FirstOrDefault();
@@ -225,26 +243,34 @@ namespace RecipePlanner_back_end.Controllers
                         i.IdIngredientNavigation = ingredientsTables.Where(t => t.Id.Equals(i.IdIngredient)).FirstOrDefault()!;
                     }
 
-                    var recipe = new Recipe()
+                    try
                     {
-                        Id = rec.Id,
-                        Description = rec?.Description,
-                        Name = rec?.Name,
-                        Calories = rec?.Calories,
-                        CookingTime = info?.CookingTime,
-                        Image = info?.Image,
-                        CuisineType = info?.IdCuisineNavigation?.Name,
-                        KindOfMeal = info?.IdKindOfMealNavigation?.Name,
-                        Diet = diet?.IdDietNavigation?.Name,
-                        Ingredients = ingr.ToDictionary(r => r.IdIngredientNavigation.Name, r => r.Quantity)
-                    };
+                        var recipe = new Recipe()
+                        {
+                            Id = rec.Id,
+                            Description = rec?.Description,
+                            Name = rec?.Name,
+                            Calories = rec?.Calories,
+                            CookingTime = info?.CookingTime,
+                            Image = info?.Image,
+                            CuisineType = info?.IdCuisineNavigation?.Name,
+                            KindOfMeal = info?.IdKindOfMealNavigation?.Name,
+                            Diet = diet?.IdDietNavigation?.Name,
+                            Ingredients = ingr.ToDictionary(r => r.IdIngredientNavigation.Name, r => r.Quantity)
 
-                    RecipiesLocall.Add(recipe);
+                        };
 
+                        Recipies.Add(recipe);
+                    }
+                    catch(Exception ex)
+                    {
+
+                    }
+           
                 }
+            }
 
-                return RecipiesLocall;
-            }       
+            return Recipies;
         }
     }
 }

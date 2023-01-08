@@ -29,6 +29,13 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+//app.UseSwaggerUI(c =>
+//{
+//    c.DocumentTitle = "ASP API Recipe";
+//    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Web API");
+//    c.RoutePrefix = String.Empty;
+//});
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
