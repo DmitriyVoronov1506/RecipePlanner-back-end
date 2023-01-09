@@ -446,14 +446,7 @@ namespace RecipePlanner_back_end.Controllers
                         }
                     }
                     
-                }
-
-                RecipiesWithPattern.RecipesWithPatternInIngredient = RecipiesWithPattern.RecipesWithPatternInIngredient.DistinctBy(r => r.Id).ToList();
-                RecipiesWithPattern.RecipesWithPatternInName = RecipiesWithPattern.RecipesWithPatternInName.DistinctBy(r => r.Id).ToList();
-
-               RecipiesWithPattern = RemoveDupliateMeals(RecipiesWithPattern);
-
-                RecipiesWithPattern.Count = RecipiesWithPattern.RecipesWithPatternInIngredient.Count + RecipiesWithPattern.RecipesWithPatternInName.Count;
+                }         
             }
             else
             {
@@ -507,15 +500,15 @@ namespace RecipePlanner_back_end.Controllers
                         }
                     }
 
-                }
-
-                RecipiesWithPattern.RecipesWithPatternInIngredient = RecipiesWithPattern.RecipesWithPatternInIngredient.DistinctBy(r => r.Id).ToList();
-                RecipiesWithPattern.RecipesWithPatternInName = RecipiesWithPattern.RecipesWithPatternInName.DistinctBy(r => r.Id).ToList();
-
-                RecipiesWithPattern = RemoveDupliateMeals(RecipiesWithPattern);
-
-                RecipiesWithPattern.Count = RecipiesWithPattern.RecipesWithPatternInIngredient.Count + RecipiesWithPattern.RecipesWithPatternInName.Count;
+                }           
             }
+
+            RecipiesWithPattern.RecipesWithPatternInIngredient = RecipiesWithPattern.RecipesWithPatternInIngredient.DistinctBy(r => r.Id).ToList();
+            RecipiesWithPattern.RecipesWithPatternInName = RecipiesWithPattern.RecipesWithPatternInName.DistinctBy(r => r.Id).ToList();
+
+            RecipiesWithPattern = RemoveDupliateMeals(RecipiesWithPattern);
+
+            RecipiesWithPattern.CreatePaggination();
 
             return RecipiesWithPattern;
         }
