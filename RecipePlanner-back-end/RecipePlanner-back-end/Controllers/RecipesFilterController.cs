@@ -384,7 +384,7 @@ namespace RecipePlanner_back_end.Controllers
             
         [HttpGet]
         [Route("/GetRecipiesByNameOrIngredient")]
-        public RecipeWithPattern GetRecipiesByPattern(string pattern)
+        public RecipeWithPattern GetRecipiesByPattern(string? pattern)
         {
             if(string.IsNullOrEmpty(pattern))
             {
@@ -516,7 +516,6 @@ namespace RecipePlanner_back_end.Controllers
 
                 RecipiesWithPattern.Count = RecipiesWithPattern.RecipesWithPatternInIngredient.Count + RecipiesWithPattern.RecipesWithPatternInName.Count;
             }
-           
 
             return RecipiesWithPattern;
         }

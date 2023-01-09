@@ -2,6 +2,6 @@
 {
     public class DevelopeService
     {
-        public bool isProduction { get; } = false;
+        public bool isProduction { get; } = true;
     }
 }
