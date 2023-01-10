@@ -17,263 +17,54 @@ namespace RecipePlanner_back_end.Controllers
     public class RecipesFilterController : ControllerBase
     {
         private readonly RecipeDatabaseContext _recipeDatabaseContext;
+        private readonly UserdbContext _userdbContext;
         private readonly DevelopeService _developeService;
 
-        List<AdditionalInfo> addinfo = null!;
-        List<MainTable> maintables = null!;
-        List<IngredientsTable> ingredientsTables = null!;
-        List<CuisineType> cuisineTypes = null!;
-        List<KindOfMeal> kindOfMeals = null!;
-        List<DietTable> dietTables = null!;
-        List<DietMeal> dietMeals = null!;
-        List<MealIngredient> mealIngredients = null!;
-
-        public RecipesFilterController(RecipeDatabaseContext recipeDatabaseContext, DevelopeService developeService)
+        public RecipesFilterController(RecipeDatabaseContext recipeDatabaseContext, DevelopeService developeService, UserdbContext userdbContext)
         {
             _recipeDatabaseContext = recipeDatabaseContext;
             _developeService = developeService;
+            _userdbContext = userdbContext;
         }
 
-        private void JsonSerializeForProduction()
-        {
-            var alergens = _recipeDatabaseContext.Alergens.Include(a => a.IngredientAlergens).ToList();
-
-            using (var sr = new StreamWriter("Alergen.json"))
-            {
-                sr.Write(JsonSerializer.Serialize(alergens));
-            }
-
-            var addinfo = _recipeDatabaseContext.AdditionalInfos.ToList();
-
-            using (var sr = new StreamWriter("Additionalinfo.json"))
-            {
-                sr.Write(JsonSerializer.Serialize(addinfo));
-            }
-
-            var cuisine = _recipeDatabaseContext.CuisineTypes.ToList();
-
-            using (var sr = new StreamWriter("CuisineType.json"))
-            {
-                sr.Write(JsonSerializer.Serialize(cuisine));
-            }
-
-            var dietmeal = _recipeDatabaseContext.DietMeals.ToList();
-
-            using (var sr = new StreamWriter("DietMeal.json"))
-            {
-                sr.Write(JsonSerializer.Serialize(dietmeal));
-            }
-
-            var diettable = _recipeDatabaseContext.DietTables.ToList();
-
-            using (var sr = new StreamWriter("DietTable.json"))
-            {
-                sr.Write(JsonSerializer.Serialize(diettable));
-            }
-
-            var ingralerg = _recipeDatabaseContext.IngredientAlergens.ToList();
-
-            using (var sr = new StreamWriter("IngredientAlergen.json"))
-            {
-                sr.Write(JsonSerializer.Serialize(ingralerg));
-            }
-
-            var ingrprice = _recipeDatabaseContext.IngredientsPrices.ToList();
-
-            using (var sr = new StreamWriter("IngredientsPrice.json"))
-            {
-                sr.Write(JsonSerializer.Serialize(ingrprice));
-            }
-
-            var ingrtable = _recipeDatabaseContext.IngredientsTables.ToList();
-
-            using (var sr = new StreamWriter("IngredientsTable.json"))
-            {
-                sr.Write(JsonSerializer.Serialize(ingrtable));
-            }
-
-            var kindofmeal = _recipeDatabaseContext.KindOfMeals.ToList();
-
-            using (var sr = new StreamWriter("KindOfMeal.json"))
-            {
-                sr.Write(JsonSerializer.Serialize(kindofmeal));
-            }
-
-            var maintable = _recipeDatabaseContext.MainTables.ToList();
-
-            using (var sr = new StreamWriter("MainTable.json"))
-            {
-                sr.Write(JsonSerializer.Serialize(maintable));
-            }
-
-            var units = _recipeDatabaseContext.Units.ToList();
-
-            using (var sr = new StreamWriter("Unit.json"))
-            {
-                sr.Write(JsonSerializer.Serialize(units));
-            }
-        }
-
-        private void JsonDeserializeForProduction()
-        {         
-            using (var sr = new StreamReader("Additionalinfo.json"))
-            {
-                addinfo = JsonSerializer.Deserialize<List<AdditionalInfo>>(sr.ReadToEnd())!;
-            }
-
-            using (var sr = new StreamReader("CuisineType.json"))
-            {
-                cuisineTypes = JsonSerializer.Deserialize<List<CuisineType>>(sr.ReadToEnd())!;
-            }
-
-            using (var sr = new StreamReader("DietMeal.json"))
-            {
-                dietMeals = JsonSerializer.Deserialize<List<DietMeal>>(sr.ReadToEnd())!;
-            }
-
-            using (var sr = new StreamReader("DietTable.json"))
-            {
-                dietTables = JsonSerializer.Deserialize<List<DietTable>>(sr.ReadToEnd())!;
-            }
-
-            using (var sr = new StreamReader("IngredientsTable.json"))
-            {
-                ingredientsTables = JsonSerializer.Deserialize<List<IngredientsTable>>(sr.ReadToEnd())!;
-            }
-
-            using (var sr = new StreamReader("MealIngreadients.json"))
-            {
-                mealIngredients = JsonSerializer.Deserialize<List<MealIngredient>>(sr.ReadToEnd())!;
-            }
-
-            using (var sr = new StreamReader("KindOfMeal.json"))
-            {
-                kindOfMeals = JsonSerializer.Deserialize<List<KindOfMeal>>(sr.ReadToEnd())!;
-            }
-
-            using (var sr = new StreamReader("MainTable.json"))
-            {
-                maintables = JsonSerializer.Deserialize<List<MainTable>>(sr.ReadToEnd())!;
-            }
-
-        }
 
         [HttpGet]
-        [Route("/GetAllRecipies")]
-        public List<Recipe> GetAllRecipies(int? count)
+        [Route("GetAllRecipies")]
+        public List<Recipe> GetAllRecipies(int count)
         {
             List<Recipe> Recipies = new List<Recipe>();
             List<MainTable> mainTableList = null!;
 
-            if (!_developeService.isProduction)
-            {              
-                if(count != null)
-                {
-                    mainTableList = _recipeDatabaseContext.MainTables.Take((int)count).ToList();
-                }
-                else
-                {
-                    mainTableList = _recipeDatabaseContext.MainTables.ToList();
-                }
-             
-                foreach(var rec in mainTableList)
-                {            
-                    var info = _recipeDatabaseContext.AdditionalInfos
-                        .Include(a => a.IdCuisineNavigation)
-                        .Include(a => a.IdKindOfMealNavigation)
-                        .Where(a => a.IdMeal.Equals(rec.Id)).FirstOrDefault();
+            int limit = 10;
+            int skip = 0;
 
-                    var diet = _recipeDatabaseContext.DietMeals.Include(d => d.IdDietNavigation).Where(d => d.IdMeal.Equals(rec.Id)).FirstOrDefault();
+            mainTableList = _recipeDatabaseContext.MainTables.ToList();
 
-                    try
-                    {
-                        var recipe = new Recipe()
-                        {
-                            Id = rec.Id,
-                            Description = rec?.Description,
-                            Name = rec?.Name,
-                            Calories = rec?.Calories,
-                            CookingTime = info?.CookingTime,
-                            Image = info?.Image,
-                            CuisineType = info?.IdCuisineNavigation?.Name,
-                            KindOfMeal = info?.IdKindOfMealNavigation?.Name,
-                            Diet = diet?.IdDietNavigation?.Name,
-                            Ingredients = _recipeDatabaseContext.MealIngredients
-                                      .Include(m => m.IdIngredientNavigation)
-                                      .Where(m => m.IdMeal.Equals(rec.Id))
-                                      .ToDictionary(r => r.IdIngredientNavigation.Name, r => r.Quantity)
-                        };
+            if(count == 0)
+            {
+                return null!;
+            }
 
-                        recipe.IngredientCount = recipe.Ingredients.Count();
+            if (count * limit - limit < mainTableList.Count)
+            {
+                skip += limit * count - limit;
 
-                        Recipies.Add(recipe);
-                    }
-                    catch(Exception ex)
-                    {
-
-                    }               
-                }
+                mainTableList = mainTableList.Skip(skip).Take(limit).ToList();
             }
             else
             {
-                JsonDeserializeForProduction();
+                return null!;
+            }
+     
+            foreach (var rec in mainTableList)
+            {
+                var recipe = CreateRecipeForLocal(rec);
 
-                if (count != null)
+                if(recipe != null)
                 {
-                    mainTableList = maintables.Take((int)count).ToList();
+                    Recipies.Add(recipe);
                 }
-                else
-                {
-                    mainTableList = maintables.ToList();
-                }
-           
-                foreach (var rec in mainTableList)
-                {
-                    var info = addinfo.Where(a => a.IdMeal.Equals(rec.Id)).FirstOrDefault();
-                    info!.IdCuisineNavigation = cuisineTypes.Where(c => c.Id.Equals(info.IdCuisine)).FirstOrDefault();
-                    info.IdKindOfMealNavigation = kindOfMeals.Where(k => k.Id.Equals(info.IdKindOfMeal)).FirstOrDefault()!;
-
-                    var diet = dietMeals.Where(d => d.IdMeal.Equals(rec.Id)).FirstOrDefault();
-
-                    if(diet != null)
-                    {
-                        diet.IdDietNavigation = dietTables.Where(d => d.Id.Equals(diet.IdDiet)).FirstOrDefault()!;
-                    }
-                    
-                    var ingr = mealIngredients.Where(a => a.IdMeal.Equals(rec.Id)).ToList();
-                    
-                    foreach(var i in ingr)
-                    {
-                        i.IdIngredientNavigation = ingredientsTables.Where(t => t.Id.Equals(i.IdIngredient)).FirstOrDefault()!;
-                    }
-
-                    try
-                    {
-                        var recipe = new Recipe()
-                        {
-                            Id = rec.Id,
-                            Description = rec?.Description,
-                            Name = rec?.Name,
-                            Calories = rec?.Calories,
-                            CookingTime = info?.CookingTime,
-                            Image = info?.Image,
-                            CuisineType = info?.IdCuisineNavigation?.Name,
-                            KindOfMeal = info?.IdKindOfMealNavigation?.Name,
-                            Diet = diet?.IdDietNavigation?.Name,
-                            Ingredients = ingr.ToDictionary(r => r.IdIngredientNavigation.Name, r => r.Quantity)
-
-                        };
-
-                        recipe.IngredientCount = recipe.Ingredients.Count();
-
-                        Recipies.Add(recipe);
-                    }
-                    catch(Exception ex)
-                    {
-
-                    }
-           
-                }
+                
             }
 
             return Recipies;
@@ -301,10 +92,10 @@ namespace RecipePlanner_back_end.Controllers
                     CuisineType = info?.IdCuisineNavigation?.Name,
                     KindOfMeal = info?.IdKindOfMealNavigation?.Name,
                     Diet = diet?.IdDietNavigation?.Name,
-                    Ingredients = _recipeDatabaseContext.MealIngredients
-                              .Include(m => m.IdIngredientNavigation)
-                              .Where(m => m.IdMeal.Equals(rec.Id))
-                              .ToDictionary(r => r.IdIngredientNavigation.Name, r => r.Quantity)
+                    Ingredients = (_recipeDatabaseContext.MealIngredients
+                                  .Include(m => m.IdIngredientNavigation)
+                                  .Where(m => m.IdMeal.Equals(rec.Id)).ToList()).DistinctBy(m => m.IdIngredientNavigation.Name)
+                                  .ToDictionary(r => r.IdIngredientNavigation.Name, r => r.Quantity)
                 };
 
                 recipe.IngredientCount = recipe.Ingredients.Count();            
@@ -316,53 +107,6 @@ namespace RecipePlanner_back_end.Controllers
                 return null!;
             }
          
-        }
-
-        private Recipe CreateRecipeForProduction(MainTable rec)
-        {
-            var info = addinfo.Where(a => a.IdMeal.Equals(rec.Id)).FirstOrDefault();
-            info!.IdCuisineNavigation = cuisineTypes.Where(c => c.Id.Equals(info.IdCuisine)).FirstOrDefault();
-            info.IdKindOfMealNavigation = kindOfMeals.Where(k => k.Id.Equals(info.IdKindOfMeal)).FirstOrDefault()!;
-
-            var diet = dietMeals.Where(d => d.IdMeal.Equals(rec.Id)).FirstOrDefault();
-
-            if (diet != null)
-            {
-                diet.IdDietNavigation = dietTables.Where(d => d.Id.Equals(diet.IdDiet)).FirstOrDefault()!;
-            }
-
-            var ingr = mealIngredients.Where(a => a.IdMeal.Equals(rec.Id)).ToList();
-
-            foreach (var i in ingr)
-            {
-                i.IdIngredientNavigation = ingredientsTables.Where(t => t.Id.Equals(i.IdIngredient)).FirstOrDefault();
-            }
-
-            try
-            {
-                var recipe = new Recipe()
-                {
-                    Id = rec.Id,
-                    Description = rec?.Description,
-                    Name = rec?.Name,
-                    Calories = rec?.Calories,
-                    CookingTime = info?.CookingTime,
-                    Image = info?.Image,
-                    CuisineType = info?.IdCuisineNavigation?.Name,
-                    KindOfMeal = info?.IdKindOfMealNavigation?.Name,
-                    Diet = diet?.IdDietNavigation?.Name,
-                    Ingredients = ingr.ToDictionary(r => r.IdIngredientNavigation.Name, r => r.Quantity)
-                };
-
-                recipe.IngredientCount = recipe.Ingredients.Count();
-
-                return recipe;
-            }
-            catch (Exception ex)
-            {
-                return null!;
-            }
-
         }
 
         private RecipeWithPattern RemoveDupliateMeals(RecipeWithPattern rwp)
@@ -383,7 +127,7 @@ namespace RecipePlanner_back_end.Controllers
         }   
             
         [HttpGet]
-        [Route("/GetRecipiesByNameOrIngredient")]
+        [Route("GetRecipiesByNameOrIngredient")]                              
         public RecipeWithPattern GetRecipiesByPattern(string? pattern)
         {
             if(string.IsNullOrEmpty(pattern))
@@ -396,111 +140,54 @@ namespace RecipePlanner_back_end.Controllers
 
             Regex regex = new Regex(@$"^(.+\s+{pattern}([s]*|[es]*)\s+.+)|(.+\s+{pattern}([s]*|[es]*)$)|(^{pattern}([s]*|[es]*)$)|(^{pattern}([s]*|[es]*)\s+.*)$", RegexOptions.IgnoreCase);
 
-            if (!_developeService.isProduction)
+            mainTableList = _recipeDatabaseContext.MainTables.ToList();
+
+            mainTableList = mainTableList.Where(m => regex.IsMatch(m.Name)).ToList();
+
+            foreach (var rec in mainTableList)
             {
-                mainTableList = _recipeDatabaseContext.MainTables.ToList();
+                var recipe = CreateRecipeForLocal(rec);
 
-                mainTableList = mainTableList.Where(m => regex.IsMatch(m.Name)).ToList();
-
-                foreach (var rec in mainTableList)
+                if (recipe != null)
                 {
-                    var recipe = CreateRecipeForLocal(rec);
-
-                    if (recipe != null)
-                    {
-                        RecipiesWithPattern.RecipesWithPatternInName.Add(recipe);
-                    }
+                    RecipiesWithPattern.RecipesWithPatternInName.Add(recipe);
                 }
-
-                var ingredietns = _recipeDatabaseContext.IngredientsTables.ToList();
-
-                ingredietns = ingredietns.Where(i => regex.IsMatch(i.Name)).ToList();
-
-                List<MealIngredient> mealingredients = new List<MealIngredient>();
-
-                foreach(var i in ingredietns)
-                {
-                    var mealingredient = _recipeDatabaseContext.MealIngredients.Where(m => m.IdIngredient.Equals(i.Id)).FirstOrDefault();
-
-                    if(mealingredient != null)
-                    {
-                        mealingredients.Add(mealingredient);
-                    }          
-                }
-
-                List<MainTable> mainTableListForIngredientsPattern = new List<MainTable>();
-
-                mealingredients = mealingredients.DistinctBy(m => m.Id).ToList();
-
-                foreach(var meal in mealingredients)
-                {
-                    var mealingredientpattern = _recipeDatabaseContext.MainTables.Where(m => m.Id.Equals(meal.IdMeal)).FirstOrDefault();
-
-                    if(mealingredientpattern != null)
-                    {
-                        var recipe = CreateRecipeForLocal(mealingredientpattern);
-
-                        if(recipe != null)
-                        {               
-                             RecipiesWithPattern.RecipesWithPatternInIngredient.Add(recipe);
-                        }
-                    }
-                    
-                }         
             }
-            else
+
+            var ingredietns = _recipeDatabaseContext.IngredientsTables.ToList();
+
+            ingredietns = ingredietns.Where(i => regex.IsMatch(i.Name)).ToList();
+
+            List<MealIngredient> mealingredients = new List<MealIngredient>();
+
+            foreach (var i in ingredietns)
             {
-                List<IngredientsTable> It = new List<IngredientsTable>();
+                var mealingredient = _recipeDatabaseContext.MealIngredients.Where(m => m.IdIngredient.Equals(i.Id)).FirstOrDefault();
 
-                JsonDeserializeForProduction();
-
-                mainTableList = maintables.ToList();
-
-                mainTableList = mainTableList.Where(m => regex.IsMatch(m.Name)).ToList();
-
-                foreach (var rec in mainTableList)
+                if (mealingredient != null)
                 {
-                    var recipe = CreateRecipeForProduction(rec);
+                    mealingredients.Add(mealingredient);
+                }
+            }
+
+            List<MainTable> mainTableListForIngredientsPattern = new List<MainTable>();
+
+            mealingredients = mealingredients.DistinctBy(m => m.Id).ToList();
+
+            foreach (var meal in mealingredients)
+            {
+                var mealingredientpattern = _recipeDatabaseContext.MainTables.Where(m => m.Id.Equals(meal.IdMeal)).FirstOrDefault();
+
+                if (mealingredientpattern != null)
+                {
+                    var recipe = CreateRecipeForLocal(mealingredientpattern);
 
                     if (recipe != null)
-                    {              
-                        RecipiesWithPattern.RecipesWithPatternInName.Add(recipe);
+                    {
+                        RecipiesWithPattern.RecipesWithPatternInIngredient.Add(recipe);
                     }
                 }
 
-                It = ingredientsTables.Where(i => regex.IsMatch(i.Name)).ToList();
-
-                List<MealIngredient> mealingredients = new List<MealIngredient>();
-
-                foreach (var i in It)
-                {
-                    var mealingredient = mealIngredients.Where(m => m.IdIngredient.Equals(i.Id)).FirstOrDefault();
-
-                    if (mealingredient != null)
-                    {
-                        mealingredients.Add(mealingredient);
-                    }
-                }
-
-                List<MainTable> mainTableListForIngredientsPattern = new List<MainTable>();
-
-                mealingredients = mealingredients.DistinctBy(m => m.Id).ToList();
-
-                foreach (var meal in mealingredients)
-                {
-                    var mealingredientpattern = maintables.Where(m => m.Id.Equals(meal.IdMeal)).FirstOrDefault();
-
-                    if (mealingredientpattern != null)
-                    {
-                        var recipe = CreateRecipeForProduction(mealingredientpattern);
-
-                        if (recipe != null)
-                        {
-                            RecipiesWithPattern.RecipesWithPatternInIngredient.Add(recipe);
-                        }
-                    }
-
-                }           
             }
 
             RecipiesWithPattern.RecipesWithPatternInIngredient = RecipiesWithPattern.RecipesWithPatternInIngredient.DistinctBy(r => r.Id).ToList();
@@ -511,6 +198,22 @@ namespace RecipePlanner_back_end.Controllers
             RecipiesWithPattern.CreatePaggination();
 
             return RecipiesWithPattern;
+        }
+
+
+        [HttpPost]
+        [Route("DontCallMeFromFrontEnd")]
+        public void CreateUsersRecipy()
+        {
+            //_userdbContext.UsersRecipies.Add(new UsersRecipy() { IdUser = Guid.NewGuid(), Diet = "1", Name = "123", IngredientCount = 10, AddingDate = DateTime.Now });
+            //_userdbContext.SaveChanges();
+
+            //var meals = _recipeDatabaseContext.MainTables.Where(t => t.Name.Contains("Ukrainian")).ToList();
+
+            //meals.ForEach(m => m.Name = m.Name.Replace("Russian", "Ukrainian"));
+
+
+            //_recipeDatabaseContext.SaveChanges();
         }
     }
 }

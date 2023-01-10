@@ -35,7 +35,7 @@ namespace RecipePlanner_back_end.Entities
             {
                 this.RecipesPaggination.Add(count, this.RecipesWithPatternInName.Skip(skip).Take(take).ToList());
 
-                skip += 10;
+                skip += take;
                 count++;
             }
 
