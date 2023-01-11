@@ -5,6 +5,7 @@ using RecipePlanner_back_end.Entities;
 using RecipePlanner_back_end.Models.Recipes;
 using RecipePlanner_back_end.Services;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -202,6 +203,7 @@ namespace RecipePlanner_back_end.Controllers
 
             RecipiesWithPattern.CreatePaggination(page);
 
+            Response.Headers.Add("Access-Control-Expose-Headers","*");
             Response.Headers.Add("TotalPages", RecipiesWithPattern.PageCount.ToString());
             Response.Headers.Add("TotalRecipies", RecipiesWithPattern.Count.ToString());
 
