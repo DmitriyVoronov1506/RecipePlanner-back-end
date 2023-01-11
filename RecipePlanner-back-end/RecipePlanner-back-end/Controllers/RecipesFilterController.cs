@@ -128,9 +128,14 @@ namespace RecipePlanner_back_end.Controllers
             
         [HttpGet]
         [Route("GetRecipiesByNameOrIngredient")]                              
-        public RecipeWithPattern GetRecipiesByPattern(string? pattern)
-        {
+        public List<Recipe> GetRecipiesByPattern(string? pattern, int page)
+        {        
             if(string.IsNullOrEmpty(pattern))
+            {
+                return null!;
+            }
+
+            if(page == 0)
             {
                 return null!;
             }
@@ -195,9 +200,12 @@ namespace RecipePlanner_back_end.Controllers
 
             RecipiesWithPattern = RemoveDupliateMeals(RecipiesWithPattern);
 
-            RecipiesWithPattern.CreatePaggination();
+            RecipiesWithPattern.CreatePaggination(page);
 
-            return RecipiesWithPattern;
+            Response.Headers.Add("TotalPages", RecipiesWithPattern.PageCount.ToString());
+            Response.Headers.Add("TotalRecipies", RecipiesWithPattern.Count.ToString());
+
+            return RecipiesWithPattern.RecipesPaggination;
         }
 
 

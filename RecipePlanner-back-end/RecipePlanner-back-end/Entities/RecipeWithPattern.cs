@@ -12,7 +12,7 @@ namespace RecipePlanner_back_end.Entities
 
         public int? Count { get; set; }
         public int? PageCount { get; set; }
-        public Dictionary<int, List<Recipe>> RecipesPaggination { get; set; }
+        public List<Recipe> RecipesPaggination { get; set; }
 
         public RecipeWithPattern()
         {
@@ -20,27 +20,33 @@ namespace RecipePlanner_back_end.Entities
             RecipesWithPatternInIngredient = new List<Recipe>();
             Count = 0;
             PageCount = 0;
-            RecipesPaggination = new Dictionary<int, List<Recipe>>();
+            RecipesPaggination = new List<Recipe>();
         }
 
-        public void CreatePaggination()
+        public void CreatePaggination(int page)
         {
             this.RecipesWithPatternInName.AddRange(this.RecipesWithPatternInIngredient);
 
+            int limit = 10;
             int skip = 0;
-            int take = 10;
-            int count = 1;
 
-            while (skip < this.RecipesWithPatternInName.Count())
+            if(page * limit - limit < this.RecipesWithPatternInName.Count)
             {
-                this.RecipesPaggination.Add(count, this.RecipesWithPatternInName.Skip(skip).Take(take).ToList());
+                skip += limit * page - limit;
 
-                skip += take;
-                count++;
+                this.RecipesPaggination.AddRange(this.RecipesWithPatternInName.Skip(skip).Take(limit).ToList());
+            }
+
+            if ((this.RecipesWithPatternInName.Count % limit) == 0)
+            {
+                this.PageCount = this.RecipesWithPatternInName.Count / limit;
+            }
+            else
+            {
+                this.PageCount = this.RecipesWithPatternInName.Count / limit + 1;
             }
 
             this.Count = this.RecipesWithPatternInName.Count;
-            this.PageCount = this.RecipesPaggination.Count;
         }
     }
 }
