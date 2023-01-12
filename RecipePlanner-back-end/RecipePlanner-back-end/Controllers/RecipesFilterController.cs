@@ -33,6 +33,8 @@ namespace RecipePlanner_back_end.Controllers
         [Route("GetAllRecipies")]
         public List<Recipe> GetAllRecipies(int count)
         {
+            string header = Request.Headers["kindofmeal"];
+
             List<Recipe> Recipies = new List<Recipe>();
             List<MainTable> mainTableList = null!;
 
@@ -67,6 +69,9 @@ namespace RecipePlanner_back_end.Controllers
                 }
                 
             }
+
+            Response.Headers.Add("Access-Control-Expose-Headers", "*");
+            Response.Headers.Add("kindofmealFromBackEnd", header);
 
             return Recipies;
         }
