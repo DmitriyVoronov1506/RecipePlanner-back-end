@@ -19,12 +19,10 @@ namespace RecipePlanner_back_end.Controllers
     {
         private readonly RecipeDatabaseContext _recipeDatabaseContext;
         private readonly UserdbContext _userdbContext;
-        private readonly DevelopeService _developeService;
 
-        public RecipesFilterController(RecipeDatabaseContext recipeDatabaseContext, DevelopeService developeService, UserdbContext userdbContext)
+        public RecipesFilterController(RecipeDatabaseContext recipeDatabaseContext, UserdbContext userdbContext)
         {
             _recipeDatabaseContext = recipeDatabaseContext;
-            _developeService = developeService;
             _userdbContext = userdbContext;
         }
 
