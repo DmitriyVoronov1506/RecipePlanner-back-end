@@ -58,7 +58,7 @@ namespace RecipePlanner_back_end.Controllers
                 {
                     foreach(var k in kindofmeal.Split(","))
                     {
-                        var tables = mainTableList.Where(m => GetRecipeAdditionalInfo(m).IdKindOfMealNavigation.Name.Equals(k.Trim())).ToList();
+                        var tables = mainTableList.Where(m => GetRecipeAdditionalInfo(m) != null && GetRecipeAdditionalInfo(m).IdKindOfMealNavigation != null && GetRecipeAdditionalInfo(m).IdKindOfMealNavigation.Name.Equals(k.Trim())).ToList();
 
                         if(tables != null)
                         {
@@ -75,11 +75,11 @@ namespace RecipePlanner_back_end.Controllers
 
                         if(!string.IsNullOrEmpty(kindofmeal))
                         {
-                            ResultFilters = ResultFilters.Where(m => GetRecipeAdditionalInfo(m).IdCuisineNavigation != null && GetRecipeAdditionalInfo(m).IdCuisineNavigation.Name.Equals(c.Trim())).ToList();                                                
+                            ResultFilters = ResultFilters.Where(m => GetRecipeAdditionalInfo(m) != null && GetRecipeAdditionalInfo(m).IdCuisineNavigation != null && GetRecipeAdditionalInfo(m).IdCuisineNavigation.Name.Equals(c.Trim())).ToList();                                                
                         }
                         else
                         {
-                            tables = mainTableList.Where(m => GetRecipeAdditionalInfo(m).IdCuisineNavigation != null && GetRecipeAdditionalInfo(m).IdCuisineNavigation.Name.Equals(c.Trim())).ToList();
+                            tables = mainTableList.Where(m => GetRecipeAdditionalInfo(m) != null && GetRecipeAdditionalInfo(m).IdCuisineNavigation != null && GetRecipeAdditionalInfo(m).IdCuisineNavigation.Name.Equals(c.Trim())).ToList();
                         }
                         
 
@@ -98,11 +98,11 @@ namespace RecipePlanner_back_end.Controllers
 
                         if(!string.IsNullOrEmpty(kindofmeal) || !string.IsNullOrEmpty(cuisinetype))
                         {
-                            ResultFilters = ResultFilters.Where(m => GetDietInfo(m) != null && GetDietInfo(m).IdDietNavigation.Name.Equals(d.Trim())).ToList();
+                            ResultFilters = ResultFilters.Where(m => GetDietInfo(m) != null && GetDietInfo(m).IdDietNavigation != null && GetDietInfo(m).IdDietNavigation.Name.Equals(d.Trim())).ToList();
                         }
                         else
                         {
-                            tables = mainTableList.Where(m => GetDietInfo(m).IdDietNavigation != null && GetDietInfo(m).IdDietNavigation.Name.Equals(d.Trim())).ToList();
+                            tables = mainTableList.Where(m => GetDietInfo(m) != null && GetDietInfo(m).IdDietNavigation != null && GetDietInfo(m).IdDietNavigation.Name.Equals(d.Trim())).ToList();
                         }
 
                         if (tables != null)
