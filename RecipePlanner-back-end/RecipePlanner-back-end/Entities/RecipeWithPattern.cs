@@ -27,6 +27,8 @@ namespace RecipePlanner_back_end.Entities
         {
             this.RecipesWithPatternInName.AddRange(this.RecipesWithPatternInIngredient);
 
+            this.RecipesWithPatternInName = this.RecipesWithPatternInName.DistinctBy(r => r.Name).ToList();
+
             int limit = 10;
             int skip = 0;
 
