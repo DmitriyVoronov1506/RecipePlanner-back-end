@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using RecipePlanner_back_end.Contexts;
 using RecipePlanner_back_end.Entities;
 using RecipePlanner_back_end.Models.Recipes;
 using RecipePlanner_back_end.Services;
 using System.Linq;
 using System.Reflection.PortableExecutable;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -31,19 +33,86 @@ namespace RecipePlanner_back_end.Controllers
         [Route("GetAllRecipies")]
         public List<Recipe> GetAllRecipies(int count)
         {
-            string header = Request.Headers["kindofmeal"];
+            string kindofmeal = Request.Headers["checkbox-kindmeal"];
+            string cuisinetype = Request.Headers["checkbox-cuisine"];
+            string dietmeal = Request.Headers["checkbox-diet"];
 
             List<Recipe> Recipies = new List<Recipe>();
             List<MainTable> mainTableList = null!;
+
+            if (count == 0)
+            {
+                return null!;
+            }
 
             int limit = 10;
             int skip = 0;
 
             mainTableList = _recipeDatabaseContext.MainTables.ToList();
 
-            if(count == 0)
+            if(!string.IsNullOrEmpty(kindofmeal) || !string.IsNullOrEmpty(cuisinetype) || !string.IsNullOrEmpty(dietmeal))
             {
-                return null!;
+                List<MainTable> ResultFilters = new List<MainTable>();
+
+                if (!string.IsNullOrEmpty(kindofmeal))
+                {
+                    foreach(var k in kindofmeal.Split(","))
+                    {
+                        var tables = mainTableList.Where(m => GetRecipeAdditionalInfo(m).IdKindOfMealNavigation.Name.Equals(k.Trim())).ToList();
+
+                        if(tables != null)
+                        {
+                            ResultFilters.AddRange(tables);
+                        }                   
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(cuisinetype))
+                {
+                    foreach (var c in cuisinetype.Split(","))
+                    {
+                        List<MainTable> tables = null!;
+
+                        if(!string.IsNullOrEmpty(kindofmeal))
+                        {
+                            ResultFilters = ResultFilters.Where(m => GetRecipeAdditionalInfo(m).IdCuisineNavigation != null && GetRecipeAdditionalInfo(m).IdCuisineNavigation.Name.Equals(c.Trim())).ToList();                                                
+                        }
+                        else
+                        {
+                            tables = mainTableList.Where(m => GetRecipeAdditionalInfo(m).IdCuisineNavigation != null && GetRecipeAdditionalInfo(m).IdCuisineNavigation.Name.Equals(c.Trim())).ToList();
+                        }
+                        
+
+                        if (tables != null)
+                        {
+                            ResultFilters.AddRange(tables);
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(dietmeal))
+                {
+                    foreach (var d in dietmeal.Split(","))
+                    {
+                        List<MainTable> tables = null!;
+
+                        if(!string.IsNullOrEmpty(kindofmeal) || !string.IsNullOrEmpty(cuisinetype))
+                        {
+                            ResultFilters = ResultFilters.Where(m => GetDietInfo(m) != null && GetDietInfo(m).IdDietNavigation.Name.Equals(d.Trim())).ToList();
+                        }
+                        else
+                        {
+                            tables = mainTableList.Where(m => GetDietInfo(m).IdDietNavigation != null && GetDietInfo(m).IdDietNavigation.Name.Equals(d.Trim())).ToList();
+                        }
+
+                        if (tables != null)
+                        {
+                            ResultFilters.AddRange(tables);
+                        }
+                    }
+                }
+
+                mainTableList = ResultFilters;
             }
 
             if (count * limit - limit < mainTableList.Count)
@@ -56,22 +125,35 @@ namespace RecipePlanner_back_end.Controllers
             {
                 return null!;
             }
-     
+
             foreach (var rec in mainTableList)
             {
                 var recipe = CreateRecipeForLocal(rec);
 
-                if(recipe != null)
+                if (recipe != null)
                 {
                     Recipies.Add(recipe);
                 }
-                
             }
 
+
             Response.Headers.Add("Access-Control-Expose-Headers", "*");
-            Response.Headers.Add("kindofmealFromBackEnd", header);
+            Response.Headers.Add("totalcount", Recipies.Count.ToString());
 
             return Recipies;
+        }
+
+        private AdditionalInfo GetRecipeAdditionalInfo(MainTable mt)
+        {
+            return _recipeDatabaseContext.AdditionalInfos
+                        .Include(a => a.IdCuisineNavigation)
+                        .Include(a => a.IdKindOfMealNavigation)
+                        .Where(a => a.IdMeal.Equals(mt.Id)).FirstOrDefault()!;
+        }
+
+        private DietMeal GetDietInfo(MainTable mt)
+        {
+            return _recipeDatabaseContext.DietMeals.Include(d => d.IdDietNavigation).Where(d => d.IdMeal.Equals(mt.Id)).FirstOrDefault()!;
         }
 
         private Recipe CreateRecipeForLocal(MainTable rec)
