@@ -32,7 +32,7 @@ namespace RecipePlanner_back_end.Controllers
         [HttpGet]
         [Route("GetAllRecipies")]
         public List<Recipe> GetAllRecipies(int count)
-        {
+        {     
             string kindofmeal = Request.Headers["checkbox-kindmeal"];
             string cuisinetype = Request.Headers["checkbox-cuisine"];
             string dietmeal = Request.Headers["checkbox-diet"];
@@ -62,7 +62,7 @@ namespace RecipePlanner_back_end.Controllers
 
                         if(tables != null)
                         {
-                            ResultFilters.AddRange(tables);
+                            ResultFilters.AddRange(tables.DistinctBy(t => t.Name));
                         }                   
                     }
                 }
@@ -309,6 +309,22 @@ namespace RecipePlanner_back_end.Controllers
 
 
             //_recipeDatabaseContext.SaveChanges();
+        }
+
+        [HttpPost]
+        [Route("TempMethod")]
+        public void Delete()
+        {
+            var meals = _recipeDatabaseContext.MainTables.Where(m => m.Name == "Dessert Crepes").ToList();
+
+
+            foreach(var m in meals)
+            {
+                var addiinfo = _recipeDatabaseContext.AdditionalInfos.Where(a => a.IdMeal == m.Id).FirstOrDefault();
+                addiinfo.IdKindOfMeal = 2;
+                _recipeDatabaseContext.SaveChanges();
+            }
+           
         }
     }
 }
