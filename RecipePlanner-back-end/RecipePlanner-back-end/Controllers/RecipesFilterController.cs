@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using RecipePlanner_back_end.Contexts;
 using RecipePlanner_back_end.Entities;
 using RecipePlanner_back_end.Models.Recipes;
 using RecipePlanner_back_end.Services;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Text.Json;
@@ -39,6 +42,7 @@ namespace RecipePlanner_back_end.Controllers
 
             List<Recipe> Recipies = new List<Recipe>();
             List<MainTable> mainTableList = null!;
+            List<MainTable> ResultFilters = new List<MainTable>();
 
             if (count == 0)
             {
@@ -51,8 +55,7 @@ namespace RecipePlanner_back_end.Controllers
             mainTableList = _recipeDatabaseContext.MainTables.ToList();
 
             if(!string.IsNullOrEmpty(kindofmeal) || !string.IsNullOrEmpty(cuisinetype) || !string.IsNullOrEmpty(dietmeal))
-            {
-                List<MainTable> ResultFilters = new List<MainTable>();
+            {             
 
                 if (!string.IsNullOrEmpty(kindofmeal))
                 {
@@ -138,7 +141,7 @@ namespace RecipePlanner_back_end.Controllers
 
 
             Response.Headers.Add("Access-Control-Expose-Headers", "*");
-            Response.Headers.Add("totalcount", Recipies.Count.ToString());
+            Response.Headers.Add("totalcount", ResultFilters.Count.ToString());
 
             return Recipies;
         }
@@ -295,36 +298,82 @@ namespace RecipePlanner_back_end.Controllers
             return RecipiesWithPattern.RecipesPaggination;
         }
 
-
-        [HttpPost]
-        [Route("DontCallMeFromFrontEnd")]
-        public void CreateUsersRecipy()
+        [HttpGet]
+        [Route("GetRecipiesByAlpha")]
+        public List<Recipe> GetRecipiesByAlpha(char alpha, int count)
         {
-            //_userdbContext.UsersRecipies.Add(new UsersRecipy() { IdUser = Guid.NewGuid(), Diet = "1", Name = "123", IngredientCount = 10, AddingDate = DateTime.Now });
-            //_userdbContext.SaveChanges();
+            if (count == 0)
+            {
+                return null!;
+            }
 
-            //var meals = _recipeDatabaseContext.MainTables.Where(t => t.Name.Contains("Ukrainian")).ToList();
+            if(!char.IsLetter(alpha))
+            {
+                return null!;
+            }
+          
+            var mainTableList = _recipeDatabaseContext.MainTables.ToList();
 
-            //meals.ForEach(m => m.Name = m.Name.Replace("Russian", "Ukrainian"));
+            mainTableList = mainTableList.Where(m => m.Name.StartsWith(alpha.ToString(), StringComparison.OrdinalIgnoreCase)).ToList();
+
+            if (mainTableList == null)
+            {
+                return null!;
+            }
+
+            List<Recipe> Recipies = new List<Recipe>();
+
+            int limit = 10;
+            int skip = 0;
+
+            if (count * limit - limit < mainTableList.Count)
+            {
+                skip += limit * count - limit;
+
+                mainTableList = mainTableList.Skip(skip).Take(limit).ToList();
+            }
+            else
+            {
+                return null!;
+            }
+
+            foreach (var rec in mainTableList)
+            {
+                var recipe = CreateRecipeForLocal(rec);
+
+                if (recipe != null)
+                {
+                    Recipies.Add(recipe);
+                }
+            }
 
 
-            //_recipeDatabaseContext.SaveChanges();
+            Response.Headers.Add("Access-Control-Expose-Headers", "*");
+            Response.Headers.Add("totalcount", mainTableList.Count.ToString());
+
+            return Recipies;
         }
+  
 
         [HttpPost]
         [Route("TempMethod")]
         public void Delete()
         {
-            var meals = _recipeDatabaseContext.MainTables.Where(m => m.Name == "Dessert Crepes").ToList();
 
+            string[] names = new string[] { "Classic Waffles", "Tender and Easy Buttermilk Waffles", "Easy Pancakes", "Buttermilk Prairie Waffles",
+            "Waffles I", "Cinnamon Roll Waffles", "Buttermilk Pancakes II", "Fluffy French Toast", "Fluffy Flapjack Pancakes"};
 
-            foreach(var m in meals)
+            foreach(var n in names)
             {
-                var addiinfo = _recipeDatabaseContext.AdditionalInfos.Where(a => a.IdMeal == m.Id).FirstOrDefault();
-                addiinfo.IdKindOfMeal = 2;
-                _recipeDatabaseContext.SaveChanges();
-            }
-           
+                var meals = _recipeDatabaseContext.MainTables.Where(m => m.Name == "Dessert Crepes").ToList();
+
+                foreach (var m in meals)
+                {
+                    var addiinfo = _recipeDatabaseContext.AdditionalInfos.Where(a => a.IdMeal == m.Id).FirstOrDefault();
+                    addiinfo.IdKindOfMeal = 2;
+                    _recipeDatabaseContext.SaveChanges();
+                }
+            }       
         }
     }
 }
