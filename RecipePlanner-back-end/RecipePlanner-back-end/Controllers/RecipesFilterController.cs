@@ -363,17 +363,17 @@ namespace RecipePlanner_back_end.Controllers
             string[] names = new string[] { "Classic Waffles", "Tender and Easy Buttermilk Waffles", "Easy Pancakes", "Buttermilk Prairie Waffles",
             "Waffles I", "Cinnamon Roll Waffles", "Buttermilk Pancakes II", "Fluffy French Toast", "Fluffy Flapjack Pancakes"};
 
-            foreach(var n in names)
+            foreach (var n in names)
             {
-                var meals = _recipeDatabaseContext.MainTables.Where(m => m.Name == "Dessert Crepes").ToList();
+                var meals = _recipeDatabaseContext.MainTables.Where(m => m.Name == n).FirstOrDefault();
 
-                foreach (var m in meals)
-                {
-                    var addiinfo = _recipeDatabaseContext.AdditionalInfos.Where(a => a.IdMeal == m.Id).FirstOrDefault();
-                    addiinfo.IdKindOfMeal = 2;
-                    _recipeDatabaseContext.SaveChanges();
-                }
-            }       
+                var addiinfo = _recipeDatabaseContext.AdditionalInfos.Where(a => a.IdMeal == meals.Id).FirstOrDefault();
+
+                addiinfo.IdKindOfMeal = 2;
+            }
+  
+            _recipeDatabaseContext.SaveChanges();         
+
         }
     }
 }
