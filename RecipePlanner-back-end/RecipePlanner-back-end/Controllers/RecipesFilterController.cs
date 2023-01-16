@@ -353,7 +353,27 @@ namespace RecipePlanner_back_end.Controllers
 
             return Recipies;
         }
-  
+
+        [HttpGet]
+        [Route("GetRecipyById")]
+        public Recipe GetRecipyById(int id)
+        {
+            Recipe recipe = null!;
+
+            var meal = _recipeDatabaseContext.MainTables.Find(id);
+
+            if(meal != null)
+            {
+                recipe = CreateRecipeForLocal(meal);
+            }
+            
+            if (recipe == null)
+            {
+                return null!;
+            }
+
+            return recipe;
+        }
 
         [HttpPost]
         [Route("TempMethod")]
