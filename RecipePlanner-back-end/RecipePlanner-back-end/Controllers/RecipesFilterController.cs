@@ -326,6 +326,18 @@ namespace RecipePlanner_back_end.Controllers
             int limit = 10;
             int skip = 0;
 
+            int pagescount = 0;
+
+            if ((mainTableList.Count / limit % limit) == 0)
+            {
+                pagescount = mainTableList.Count / limit;
+            }
+            else
+            {
+                pagescount = mainTableList.Count / limit + 1;
+            }
+
+
             if (count * limit - limit < mainTableList.Count)
             {
                 skip += limit * count - limit;
@@ -346,10 +358,9 @@ namespace RecipePlanner_back_end.Controllers
                     Recipies.Add(recipe);
                 }
             }
-
-
+        
             Response.Headers.Add("Access-Control-Expose-Headers", "*");
-            Response.Headers.Add("totalcount", mainTableList.Count.ToString());
+            Response.Headers.Add("totalcount", pagescount.ToString());
 
             return Recipies;
         }
