@@ -316,7 +316,7 @@ namespace RecipePlanner_back_end.Controllers
 
             mainTableList = mainTableList.Where(m => m.Name.StartsWith(alpha.ToString(), StringComparison.OrdinalIgnoreCase)).ToList();
 
-            if (mainTableList == null)
+            if (mainTableList == null || mainTableList.Count == 0)
             {
                 return null!;
             }
@@ -328,7 +328,7 @@ namespace RecipePlanner_back_end.Controllers
 
             int pagescount = 0;
 
-            if ((mainTableList.Count / limit % limit) == 0)
+            if ((mainTableList.Count % limit) == 0)
             {
                 pagescount = mainTableList.Count / limit;
             }
