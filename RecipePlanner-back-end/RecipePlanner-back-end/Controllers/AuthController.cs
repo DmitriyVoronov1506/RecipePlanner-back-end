@@ -25,7 +25,7 @@ namespace RecipePlanner_back_end.Controllers
 
         [HttpPost]
         [Route("Register")]
-        public string Register([FromBody] RegUserModel RegUser)
+        public string Register([FromForm] RegUserModel RegUser)
         {
             if (String.IsNullOrEmpty(RegUser.UserName) || RegUser.UserName.Length < 3)
             {
