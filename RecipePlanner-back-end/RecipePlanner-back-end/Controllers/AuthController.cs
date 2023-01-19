@@ -32,33 +32,33 @@ namespace RecipePlanner_back_end.Controllers
 
         [HttpPost]
         [Route("Register")]
-        public string Register([FromForm] RegUserModel RegUser)
+        public JsonResult Register([FromForm] RegUserModel RegUser)
         {
             if (String.IsNullOrEmpty(RegUser.UserName) || RegUser.UserName.Length < 3)
             {
-                return "User name cant be empty or less then 3 letters!";
+                return new JsonResult("User name cant be empty or less then 3 letters!");
             }
 
             if(String.IsNullOrEmpty(RegUser.Email))
             {
-                return "Email cant be empty!";
+                return new JsonResult("Email cant be empty!");
             }
 
             if (String.IsNullOrEmpty(RegUser.Password1) || String.IsNullOrEmpty(RegUser.Password2) || RegUser.Password1.Length < 5)
             {
-                return "Password cant be empty or less then 5 symbols!";
+                return new JsonResult("Password cant be empty or less then 5 symbols!");
             }
 
             var userWithEmail = _userdbContext.Users.Where(u => u.Email == RegUser.Email).FirstOrDefault();
 
             if(userWithEmail != null)
             {
-                return "User with this email alresy exists!";
+                return new JsonResult("User with this email alresy exists!");
             }
 
             if(!RegUser.Password1.Equals(RegUser.Password2))
             {
-                return "Passwords must be similar!";
+                return new JsonResult("Passwords must be similar!");
             }
 
             var user = new User();
@@ -75,7 +75,7 @@ namespace RecipePlanner_back_end.Controllers
             _userdbContext.Users.Add(user);
             _userdbContext.SaveChanges();
 
-            return "Ok";
+            return new JsonResult("Ok");
         }
 
         [HttpPost]
