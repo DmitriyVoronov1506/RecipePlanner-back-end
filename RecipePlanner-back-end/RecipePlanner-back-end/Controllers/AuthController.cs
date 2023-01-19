@@ -23,6 +23,13 @@ namespace RecipePlanner_back_end.Controllers
             _authService = authService;
         }
 
+        [HttpGet]
+        [Route("GetCurrentUser")]
+        public User GetCurrentUser()
+        {
+            return _authService.User != null ? _authService.User with { PassHash = "*", PassSalt = "*" } : null!; 
+        }
+
         [HttpPost]
         [Route("Register")]
         public string Register([FromForm] RegUserModel RegUser)
@@ -71,9 +78,9 @@ namespace RecipePlanner_back_end.Controllers
             return "Ok";
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("Login")]
-        public string Login(string email, string password)
+        public string Login([FromForm] string email, [FromForm] string password)
         {
             if (string.IsNullOrEmpty(email))
             {
@@ -110,7 +117,7 @@ namespace RecipePlanner_back_end.Controllers
             return "Ok";
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("LogOut")]
         public string LogOut()
         {

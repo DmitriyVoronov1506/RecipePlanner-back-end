@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace RecipePlanner_back_end.Models.Users
 {
-    public partial class User
+    public partial record User
     {
         public Guid Id { get; set; }
         public string? UserName { get; set; }
