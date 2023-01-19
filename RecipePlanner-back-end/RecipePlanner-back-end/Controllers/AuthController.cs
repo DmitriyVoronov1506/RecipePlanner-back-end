@@ -80,18 +80,18 @@ namespace RecipePlanner_back_end.Controllers
 
         [HttpPost]
         [Route("Login")]
-        public string Login([FromForm] string email, [FromForm] string password)
+        public JsonResult Login([FromForm] string email, [FromForm] string password)
         {
             if (string.IsNullOrEmpty(email))
             {
                 HttpContext.Response.StatusCode = 409;
-                return "Login required";
+                return new JsonResult("Login required");
             }
 
             if (string.IsNullOrEmpty(password))
             {
                 HttpContext.Response.StatusCode = 409;
-                return "Password required";
+                return new JsonResult("Password required");
             }
 
             var user = _userdbContext.Users.Where(u => u.Email.Equals(email)).FirstOrDefault();
@@ -99,7 +99,7 @@ namespace RecipePlanner_back_end.Controllers
             if (user == null)
             {
                 HttpContext.Response.StatusCode = 401;
-                return "Wrong email!";
+                return new JsonResult("Wrong email!");
             }
 
             string PassHash = _hasher.Hash(password + user.PassSalt);
@@ -107,14 +107,14 @@ namespace RecipePlanner_back_end.Controllers
             if (PassHash != user.PassHash)
             {
                 HttpContext.Response.StatusCode = 401;
-                return "Credentials invalid! Wrong password!";
+                return new JsonResult("Credentials invalid! Wrong password!");
             }
 
             HttpContext.Session.SetString("userId", user.Id.ToString());
 
             HttpContext.Session.SetString("AuthMoment", DateTime.Now.Ticks.ToString());
 
-            return "Ok";
+            return new JsonResult("Ok");
         }
 
         [HttpPost]
