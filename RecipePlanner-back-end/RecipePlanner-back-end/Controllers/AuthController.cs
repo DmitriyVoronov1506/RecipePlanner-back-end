@@ -27,7 +27,7 @@ namespace RecipePlanner_back_end.Controllers
         [Route("GetCurrentUser")]
         public User GetCurrentUser()
         {
-            return _authService.User != null ? _authService.User with { PassHash = "*", PassSalt = "*" } : null!; 
+            return _authService.User != null ? _authService.User with { PassHash = "*", PassSalt = "*" } : new Models.Users.User(); 
         }
 
         [HttpPost]
