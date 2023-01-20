@@ -44,6 +44,21 @@ namespace RecipePlanner_back_end.Controllers
                 return new JsonResult("Email cant be empty!");
             }
 
+            if(String.IsNullOrEmpty(RegUser.Gender))
+            {
+                return new JsonResult("You have to choose gender!");
+            }
+
+            if (RegUser.BirthdayDate == null)
+            {
+                return new JsonResult("You have to choose birthday date!");
+            }
+
+            if (RegUser.Region == "Choose region")
+            {
+                return new JsonResult("You have to choose region!");
+            }
+
             if (String.IsNullOrEmpty(RegUser.Password1) || String.IsNullOrEmpty(RegUser.Password2) || RegUser.Password1.Length < 5)
             {
                 return new JsonResult("Password cant be empty or less then 5 symbols!");
@@ -53,7 +68,7 @@ namespace RecipePlanner_back_end.Controllers
 
             if(userWithEmail != null)
             {
-                return new JsonResult("User with this email alresy exists!");
+                return new JsonResult("User with this email already exists!");
             }
 
             if(!RegUser.Password1.Equals(RegUser.Password2))
