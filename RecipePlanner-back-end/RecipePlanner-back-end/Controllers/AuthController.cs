@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using RecipePlanner_back_end.Contexts;
 using RecipePlanner_back_end.Models;
@@ -132,7 +133,10 @@ namespace RecipePlanner_back_end.Controllers
                 return new JsonResult("Credentials invalid! Wrong password!");
             }
 
-            return new JsonResult(user.Id);
+            Response.Headers.Add("Access-Control-Expose-Headers", "*");
+            Response.Headers.Add("userid", user.Id.ToString());
+
+            return new JsonResult("Ok");
         }
 
         [HttpPost]
