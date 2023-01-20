@@ -27,7 +27,14 @@ namespace RecipePlanner_back_end.Controllers
         [Route("GetCurrentUser")]
         public User GetCurrentUser()
         {
-            return _authService.User != null ? _authService.User with { PassHash = "*", PassSalt = "*" } : new Models.Users.User(); 
+            string userid = Request.Headers["current-user-id"];
+
+            if (String.IsNullOrEmpty(userid))
+            {
+                return new Models.Users.User();
+            }
+
+            return _userdbContext.Users.Find(Guid.Parse(userid))! with { PassHash = "*", PassSalt = "*" };
         }
 
         [HttpPost]
@@ -125,11 +132,7 @@ namespace RecipePlanner_back_end.Controllers
                 return new JsonResult("Credentials invalid! Wrong password!");
             }
 
-            HttpContext.Session.SetString("userId", user.Id.ToString());
-
-            HttpContext.Session.SetString("AuthMoment", DateTime.Now.Ticks.ToString());
-
-            return new JsonResult("Ok");
+            return new JsonResult(user.Id);
         }
 
         [HttpPost]
