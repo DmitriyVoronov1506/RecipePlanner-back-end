@@ -154,36 +154,46 @@ namespace RecipePlanner_back_end.Controllers
 
         [HttpPut]
         [Route("ChangePassword")]
-        public string ChangePassword(string oldPassword, string newPassword1, string newPassword2)
+        public JsonResult ChangePassword(string oldPassword, string newPassword1, string newPassword2)
         {
-            if(_authService.User == null)
+            string userid = Request.Headers["current-user-id"];
+
+            if (String.IsNullOrEmpty(userid))
             {
-                return "You need to log in first!";
+                return new JsonResult("Unauthorized");
             }
 
             if (string.IsNullOrEmpty(oldPassword) || string.IsNullOrEmpty(newPassword1) || string.IsNullOrEmpty(newPassword2) || newPassword1.Length < 5)
             {
-                return "Password cant be empty or less then 5 symbols!";
+                return new JsonResult("Password cant be empty or less then 5 symbols!");
             }
 
             if(!newPassword1.Equals(newPassword2))
             {
-                return "Passwords must be similar!";
+                return new JsonResult("Passwords must be similar!");
             }
 
-            string OldPassHash = _hasher.Hash(oldPassword + _authService.User.PassSalt);
-            string NewPassHash = _hasher.Hash(newPassword1 + _authService.User.PassSalt);
+            var user = _userdbContext.Users.Find(Guid.Parse(userid));
+
+            string OldPassHash = _hasher.Hash(oldPassword + user.PassSalt);
+
+            if(!OldPassHash.Equals(user.PassHash))
+            {
+                return new JsonResult("You wrote a worng password!");
+            }
+
+            string NewPassHash = _hasher.Hash(newPassword1 + user.PassSalt);
 
             if (OldPassHash.Equals(NewPassHash))
             {
-                return "old and new passwords cant be similar!";
+                return new JsonResult("Old and new password cant be similar!");
             }
 
-            _authService.User.PassHash = NewPassHash;
+            user.PassHash = NewPassHash;
 
             _userdbContext.SaveChanges();
 
-            return "Ok";
+            return new JsonResult("Ok");
         }
 
         [HttpPut]
