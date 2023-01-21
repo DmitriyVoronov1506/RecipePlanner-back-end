@@ -154,7 +154,7 @@ namespace RecipePlanner_back_end.Controllers
 
         [HttpPut]
         [Route("ChangePassword")]
-        public JsonResult ChangePassword(string oldPassword, string newPassword1, string newPassword2)
+        public JsonResult ChangePassword(string? oldPassword, string? newPassword1, string? newPassword2)
         {
             string userid = Request.Headers["current-user-id"];
 
