@@ -107,13 +107,11 @@ namespace RecipePlanner_back_end.Controllers
         {
             if (string.IsNullOrEmpty(email))
             {
-                HttpContext.Response.StatusCode = 409;
                 return new JsonResult("Login required");
             }
 
             if (string.IsNullOrEmpty(password))
             {
-                HttpContext.Response.StatusCode = 409;
                 return new JsonResult("Password required");
             }
 
@@ -121,7 +119,6 @@ namespace RecipePlanner_back_end.Controllers
 
             if (user == null)
             {
-                HttpContext.Response.StatusCode = 401;
                 return new JsonResult("Wrong email!");
             }
 
@@ -129,7 +126,6 @@ namespace RecipePlanner_back_end.Controllers
 
             if (PassHash != user.PassHash)
             {
-                HttpContext.Response.StatusCode = 401;
                 return new JsonResult("Credentials invalid! Wrong password!");
             }
 
@@ -179,7 +175,7 @@ namespace RecipePlanner_back_end.Controllers
 
             if(!OldPassHash.Equals(user.PassHash))
             {
-                return new JsonResult("You wrote a worng password!");
+                return new JsonResult("You wrote a wrong password!");
             }
 
             string NewPassHash = _hasher.Hash(newPassword1 + user.PassSalt);
