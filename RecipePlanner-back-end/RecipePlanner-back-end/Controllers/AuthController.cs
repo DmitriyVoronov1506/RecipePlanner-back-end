@@ -185,5 +185,60 @@ namespace RecipePlanner_back_end.Controllers
 
             return "Ok";
         }
+
+        [HttpPut]
+        [Route("ChangeUserName")]
+        public JsonResult ChangeUserName(string newName)
+        {
+            string userid = Request.Headers["current-user-id"];
+
+            if (String.IsNullOrEmpty(userid))
+            {
+                return new JsonResult("Unauthorized");
+            }
+
+            if(string.IsNullOrEmpty(newName) || newName.Length < 3)
+            {
+                return new JsonResult("User name cant be empty or less then 3 letters!");
+            }
+
+            var user = _userdbContext.Users.Find(Guid.Parse(userid));
+            user.UserName = newName;
+
+            _userdbContext.SaveChanges();
+
+            return new JsonResult("Ok");
+        }
+
+        [HttpPut]
+        [Route("ChangeEmail")]
+        public JsonResult ChangeEmail(string newEmail)
+        {
+            string userid = Request.Headers["current-user-id"];
+
+            if (String.IsNullOrEmpty(userid))
+            {
+                return new JsonResult("Unauthorized");
+            }
+
+            if (string.IsNullOrEmpty(newEmail))
+            {
+                return new JsonResult("Email cant be empty!");
+            }
+
+            var userWithEmail = _userdbContext.Users.Where(u => u.Email == newEmail).FirstOrDefault();
+
+            if (userWithEmail != null)
+            {
+                return new JsonResult("User with this email already exists!");
+            }
+
+            var user = _userdbContext.Users.Find(Guid.Parse(userid));
+            user.Email = newEmail;
+
+            _userdbContext.SaveChanges();
+
+            return new JsonResult("Ok");
+        }
     }
 }
