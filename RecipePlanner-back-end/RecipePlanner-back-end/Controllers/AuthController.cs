@@ -240,5 +240,53 @@ namespace RecipePlanner_back_end.Controllers
 
             return new JsonResult("Ok");
         }
+
+        [HttpPut]
+        [Route("ChangeBirthdayDate")]
+        public JsonResult ChangeBirthdayDate(DateTime? newBirthday)
+        {
+            string userid = Request.Headers["current-user-id"];
+
+            if (String.IsNullOrEmpty(userid))
+            {
+                return new JsonResult("Unauthorized");
+            }
+
+            if (newBirthday == null)
+            {
+                return new JsonResult("Choose new birthday date!");
+            }
+
+            var user = _userdbContext.Users.Find(Guid.Parse(userid));
+            user.BirthdayDate = newBirthday;
+
+            _userdbContext.SaveChanges();
+
+            return new JsonResult("Ok");
+        }
+
+        [HttpPut]
+        [Route("ChangeRegion")]
+        public JsonResult ChangeRegion(string newRegion)
+        {
+            string userid = Request.Headers["current-user-id"];
+
+            if (String.IsNullOrEmpty(userid))
+            {
+                return new JsonResult("Unauthorized");
+            }
+
+            if (newRegion == "Choose region")
+            {
+                return new JsonResult("You have to choose region!");
+            }
+
+            var user = _userdbContext.Users.Find(Guid.Parse(userid));
+            user.Region = newRegion;
+
+            _userdbContext.SaveChanges();
+
+            return new JsonResult("Ok");
+        }
     }
 }
