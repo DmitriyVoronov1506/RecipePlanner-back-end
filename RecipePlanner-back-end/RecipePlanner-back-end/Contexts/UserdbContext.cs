@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using RecipePlanner_back_end.Entities;
 using RecipePlanner_back_end.Models.Users;
 
 namespace RecipePlanner_back_end.Contexts

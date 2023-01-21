@@ -1,9 +1,7 @@
 ﻿namespace RecipePlanner_back_end.Entities
 {
-    public class UsersRecipy
+    public class UserRecipe
     {
-        public Guid Id { get; set; }
-        public Guid? IdUser { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
         public string? Calories { get; set; }
@@ -14,6 +12,5 @@
         public string? Diet { get; set; }
         public string? Ingredients { get; set; }
         public int? IngredientCount { get; set; }
-        public DateTime? AddingDate { get; set; }
     }
 }
