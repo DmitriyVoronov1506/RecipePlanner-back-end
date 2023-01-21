@@ -188,7 +188,7 @@ namespace RecipePlanner_back_end.Controllers
 
         [HttpPut]
         [Route("ChangeUserName")]
-        public JsonResult ChangeUserName(string newName)
+        public JsonResult ChangeUserName(string? newName)
         {
             string userid = Request.Headers["current-user-id"];
 
@@ -212,7 +212,7 @@ namespace RecipePlanner_back_end.Controllers
 
         [HttpPut]
         [Route("ChangeEmail")]
-        public JsonResult ChangeEmail(string newEmail)
+        public JsonResult ChangeEmail(string? newEmail)
         {
             string userid = Request.Headers["current-user-id"];
 
@@ -267,7 +267,7 @@ namespace RecipePlanner_back_end.Controllers
 
         [HttpPut]
         [Route("ChangeRegion")]
-        public JsonResult ChangeRegion(string newRegion)
+        public JsonResult ChangeRegion(string? newRegion)
         {
             string userid = Request.Headers["current-user-id"];
 
