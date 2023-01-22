@@ -99,5 +99,50 @@ namespace RecipePlanner_back_end.Controllers
             return new JsonResult("Ok");
         }
 
+
+        [HttpGet]
+        [Route("GetUsersRecipyById")]
+        public JsonResult AddNewRecipe(string? id)
+        {
+            string? userid = Request?.Headers["current-user-id"];
+
+            if (String.IsNullOrEmpty(userid))
+            {
+                return new JsonResult("Unauthorized");
+            }
+
+            if (String.IsNullOrEmpty(id))
+            {
+                return new JsonResult("Wrong recipe id!");
+            }
+
+            return new JsonResult(_userdbContext.UsersRecipies.Find(Guid.Parse(id)));
+        }
+
+        [HttpDelete]
+        [Route("DeleteCurrentRecipe")]
+        public JsonResult DeleteCurrentRecipe(string? recipeId)
+        {
+            string? userid = Request?.Headers["current-user-id"];
+
+            if (String.IsNullOrEmpty(userid))
+            {
+                return new JsonResult("Unauthorized");
+            }
+
+            if (String.IsNullOrEmpty(recipeId))
+            {
+                return new JsonResult("Wrong recipe id!");
+            }
+
+            var recipeToDelete = _userdbContext.UsersRecipies.Where(u => u.Id == Guid.Parse(recipeId)).FirstOrDefault();
+
+            if (recipeToDelete != null)
+            {
+                _userdbContext.UsersRecipies.Remove(recipeToDelete);
+            }
+
+            return new JsonResult("Ok");
+        }
     }
 }
