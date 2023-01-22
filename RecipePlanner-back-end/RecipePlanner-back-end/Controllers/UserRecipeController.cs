@@ -21,7 +21,7 @@ namespace RecipePlanner_back_end.Controllers
         [Route("GetUsersRecipies")]
         public JsonResult GetUsersRecipies()
         {
-            string userid = Request.Headers["current-user-id"];
+            string? userid = Request?.Headers["current-user-id"];
 
             if (String.IsNullOrEmpty(userid))
             {
@@ -37,7 +37,7 @@ namespace RecipePlanner_back_end.Controllers
         [Route("AddNewRecipe")]
         public JsonResult AddNewRecipe([FromForm] UserRecipe userRecipy)
         {
-            string userid = Request.Headers["current-user-id"];
+            string? userid = Request?.Headers["current-user-id"];
 
             if (String.IsNullOrEmpty(userid))
             {

@@ -15,13 +15,11 @@ namespace RecipePlanner_back_end.Controllers
     {
         private readonly IHasher _hasher;
         private readonly UserdbContext _userdbContext;
-        private readonly IAuthService _authService;
 
-        public AuthController(IHasher hasher, UserdbContext userdbContext, IAuthService authService)
+        public AuthController(IHasher hasher, UserdbContext userdbContext)
         {
             _hasher = hasher;
             _userdbContext = userdbContext;
-            _authService = authService;
         }
 
         [HttpGet]
@@ -139,12 +137,6 @@ namespace RecipePlanner_back_end.Controllers
         [Route("LogOut")]
         public string LogOut()
         {
-            if (_authService.User != null)
-            {
-                HttpContext.Session.Remove("userId");
-                return "Ok";
-            }
-
             return "Ok";
         }
 
@@ -196,7 +188,7 @@ namespace RecipePlanner_back_end.Controllers
         [Route("ChangeUserName")]
         public JsonResult ChangeUserName(string? newName)
         {
-            string userid = Request.Headers["current-user-id"];
+            string? userid = Request?.Headers["current-user-id"];
 
             if (String.IsNullOrEmpty(userid))
             {
@@ -220,7 +212,7 @@ namespace RecipePlanner_back_end.Controllers
         [Route("ChangeEmail")]
         public JsonResult ChangeEmail(string? newEmail)
         {
-            string userid = Request.Headers["current-user-id"];
+            string? userid = Request?.Headers["current-user-id"];
 
             if (String.IsNullOrEmpty(userid))
             {
@@ -251,7 +243,7 @@ namespace RecipePlanner_back_end.Controllers
         [Route("ChangeBirthdayDate")]
         public JsonResult ChangeBirthdayDate(DateTime? newBirthday)
         {
-            string userid = Request.Headers["current-user-id"];
+            string? userid = Request?.Headers["current-user-id"];
 
             if (String.IsNullOrEmpty(userid))
             {
@@ -275,7 +267,7 @@ namespace RecipePlanner_back_end.Controllers
         [Route("ChangeRegion")]
         public JsonResult ChangeRegion(string? newRegion)
         {
-            string userid = Request.Headers["current-user-id"];
+            string? userid = Request?.Headers["current-user-id"];
 
             if (String.IsNullOrEmpty(userid))
             {
