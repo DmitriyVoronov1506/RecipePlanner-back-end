@@ -11,6 +11,6 @@
         public string? KindOfMeal { get; set; }
         public string? Diet { get; set; }
         public string? Ingredients { get; set; }
-        public int? IngredientCount { get; set; }
+        public string? IngredientCount { get; set; }
     }
 }
