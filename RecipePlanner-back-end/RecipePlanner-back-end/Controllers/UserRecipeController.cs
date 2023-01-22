@@ -6,7 +6,7 @@ using RecipePlanner_back_end.Models.Users;
 
 namespace RecipePlanner_back_end.Controllers
 {
-    [Route("RecipesFilterController")]
+    [Route("UserRecipeController")]
     [ApiController]
     public class UserRecipeController : ControllerBase
     {
