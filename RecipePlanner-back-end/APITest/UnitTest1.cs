@@ -18,7 +18,7 @@ namespace APITest
             UserRecipeController userRecipeController = new UserRecipeController(null!);
 
             Assert.AreEqual(userRecipeController.GetUsersRecipies().Value?.ToString(), "Unauthorized");
-            Assert.AreEqual(userRecipeController.AddNewRecipe(null!).Value?.ToString(), "Unauthorized");
+            Assert.AreEqual(userRecipeController.GetUsersRecipyById("Test").Value?.ToString(), "Unauthorized");
 
         }
     }

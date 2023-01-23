@@ -101,7 +101,7 @@ namespace RecipePlanner_back_end.Controllers
 
         [HttpGet]
         [Route("GetUsersRecipyById")]
-        public JsonResult AddNewRecipe(string? id)
+        public JsonResult GetUsersRecipyById(string? id)
         {
             string? userid = Request?.Headers["current-user-id"];
 
