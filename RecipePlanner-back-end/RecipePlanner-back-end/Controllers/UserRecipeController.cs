@@ -82,7 +82,7 @@ namespace RecipePlanner_back_end.Controllers
                 IdUser = usersId,
                 Name = userRecipy.Name,
                 Description = userRecipy.Description,
-                Calories = userRecipy.Name,
+                Calories = userRecipy.Calories,
                 CookingTime = userRecipy.CookingTime,
                 Image = userRecipy.Image,
                 CuisineType = userRecipy.CuisineType,
