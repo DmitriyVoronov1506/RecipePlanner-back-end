@@ -386,25 +386,5 @@ namespace RecipePlanner_back_end.Controllers
             return recipe;
         }
 
-        [HttpPost]
-        [Route("TempMethod")]
-        public void Delete()
-        {
-
-            string[] names = new string[] { "Classic Waffles", "Tender and Easy Buttermilk Waffles", "Easy Pancakes", "Buttermilk Prairie Waffles",
-            "Waffles I", "Cinnamon Roll Waffles", "Buttermilk Pancakes II", "Fluffy French Toast", "Fluffy Flapjack Pancakes"};
-
-            foreach (var n in names)
-            {
-                var meals = _recipeDatabaseContext.MainTables.Where(m => m.Name == n).FirstOrDefault();
-
-                var addiinfo = _recipeDatabaseContext.AdditionalInfos.Where(a => a.IdMeal == meals.Id).FirstOrDefault();
-
-                addiinfo.IdKindOfMeal = 2;
-            }
-  
-            _recipeDatabaseContext.SaveChanges();         
-
-        }
     }
 }

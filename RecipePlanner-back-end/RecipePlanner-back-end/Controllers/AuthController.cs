@@ -6,6 +6,7 @@ using RecipePlanner_back_end.Contexts;
 using RecipePlanner_back_end.Models;
 using RecipePlanner_back_end.Models.Users;
 using RecipePlanner_back_end.Services;
+using System.Text.RegularExpressions;
 
 namespace RecipePlanner_back_end.Controllers
 {
@@ -48,6 +49,11 @@ namespace RecipePlanner_back_end.Controllers
             if(String.IsNullOrEmpty(RegUser.Email))
             {
                 return new JsonResult("Email cant be empty!");
+            }
+
+            if(!Regex.IsMatch(RegUser.Email, @"^[A-z][A-z\d_]{3,16}@([a-z]{1,10}\.){1,5}[a-z]{2,3}$"))
+            {
+                return new JsonResult("Such email doesnt exists! Wrong format!");
             }
 
             if(String.IsNullOrEmpty(RegUser.Gender))

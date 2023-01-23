@@ -99,7 +99,6 @@ namespace RecipePlanner_back_end.Controllers
             return new JsonResult("Ok");
         }
 
-
         [HttpGet]
         [Route("GetUsersRecipyById")]
         public JsonResult AddNewRecipe(string? id)
@@ -141,6 +140,8 @@ namespace RecipePlanner_back_end.Controllers
             {
                 _userdbContext.UsersRecipies.Remove(recipeToDelete);
             }
+
+            _userdbContext.SaveChanges();
 
             return new JsonResult("Ok");
         }
